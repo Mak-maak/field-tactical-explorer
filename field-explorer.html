@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pak Warriors | Field Tactical Simulator</title>
+    
+    <!-- Local file:/// Compatible PNG Favicon -->
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACLSURBVFhH7ZUxCoBADAV3N+/gOT2Wd7CwtLQQ02ggfgvpB4vszGSSW4xKqS2v9W0y7u0C1wE8wAM8wAM8eIeA7/s+51wupYi1FmOM8b5v34/xeDxejTHGGIMxhn0p2Z4QAt77jDHmvffWWiRJEtZaZFlGnucMwHA4HBAyDENQSqFpmp+67vV8wAM8wIPXCby4l48E5936AAAAAElFTkSuQmCC">
+
+    <style>
+        :root {
+            --bg-dark: #0b1120;
+            --surface: #1e293b;
+            --border: #334155;
+            --primary: #38bdf8;
+            --primary-dim: rgba(56, 189, 248, 0.15);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --grass-light: #166534;
+            --grass-dark: #14532d;
+            --pitch: #b45309;
+            --fielder-boundary: #38bdf8;
+            --fielder-inner: #f59e0b;
+            --fielder-close: #ef4444;
+            --team-color: #10b981;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Top Navigation Header with Team Selector */
+        .main-header {
+            background-color: #0f172a;
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .brand-logo {
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+        }
+
+        .brand-title h1 {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            color: var(--text-main);
+            text-transform: uppercase;
+        }
+
+        .brand-title span {
+            font-size: 0.7rem;
+            color: var(--primary);
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        /* Team Selector Badge in Header */
+        .team-header-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            padding: 0.4rem 0.85rem;
+            border-radius: 8px;
+        }
+
+        .team-header-badge label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .team-color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--team-color);
+            box-shadow: 0 0 8px var(--team-color);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .team-select {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            outline: none;
+            padding-right: 0.5rem;
+        }
+
+        .team-select option {
+            background-color: var(--surface);
+            color: var(--text-main);
+        }
+
+        /* Responsive Dashboard Layout */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 320px 1fr 380px;
+            gap: 1.5rem;
+            padding: 1.25rem 1.5rem;
+            height: calc(100vh - 58px);
+            max-width: 1920px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .panel {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .panel-header {
+            background-color: #0f172a;
+            padding: 1rem 1.25rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-content {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+        }
+
+        /* Controls & Inputs */
+        .control-group { display: flex; flex-direction: column; gap: 0.6rem; }
+        .control-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-main); }
+        
+        select.control-select {
+            width: 100%;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.85rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+        }
+        select.control-select:focus { border-color: var(--primary); }
+
+        .radio-group { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+        .radio-btn {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.85rem;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: 0.2s ease;
+            user-select: none;
+        }
+        .radio-btn.active {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: #000;
+        }
+
+        /* Field Canvas Environment */
+        .field-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #05080f;
+            position: relative;
+            padding: 1rem;
+            overflow: hidden;
+            min-height: 350px;
+        }
+
+        .svg-field {
+            width: 100%;
+            max-width: 750px;
+            height: auto;
+            aspect-ratio: 1;
+            touch-action: none;
+        }
+
+        /* Tactical Breakdown Panel */
+        .rationale-box {
+            background-color: var(--bg-dark);
+            border-left: 4px solid var(--primary);
+            padding: 1.25rem;
+            border-radius: 6px;
+        }
+        .rationale-box h3 { font-size: 1.05rem; color: var(--primary); margin-bottom: 0.5rem; }
+        .rationale-box p { font-size: 0.9rem; line-height: 1.6; color: var(--text-muted); }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 6px;
+        }
+
+        .roster-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 320px; }
+        .roster-table th { text-align: left; padding: 0.75rem 0.5rem; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        .roster-table td { padding: 0.85rem 0.5rem; border-bottom: 1px solid var(--border); }
+        
+        .role-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .fielder-node { transition: cx 0.5s ease-in-out, cy 0.5s ease-in-out; }
+        .fielder-label { transition: x 0.5s ease-in-out, y 0.5s ease-in-out; pointer-events: none; }
+        .field-label-bg { transition: x 0.5s ease-in-out, y 0.5s ease-in-out; }
+
+        @media (max-width: 1100px) {
+            .dashboard {
+                grid-template-columns: 300px 1fr;
+                grid-template-rows: auto 1fr;
+                height: auto;
+            }
+            .dashboard > .panel:nth-child(3) {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body { height: auto; display: block; }
+            .dashboard {
+                display: flex;
+                flex-direction: column;
+                height: auto;
+                padding: 1rem;
+                gap: 1rem;
+            }
+            .panel {
+                height: auto;
+                max-height: none;
+                flex: none;
+            }
+            .panel-content {
+                overflow-y: visible;
+                padding: 1rem;
+            }
+            .field-container {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Header Bar with Team Selector -->
+    <header class="main-header">
+        <div class="brand">
+            <svg class="brand-logo" viewBox="0 0 100 100">
+                <rect width="100" height="100" rx="20" fill="#1e293b"/>
+                <circle cx="50" cy="50" r="36" fill="none" stroke="#22c55e" stroke-width="7"/>
+                <rect x="44" y="25" width="12" height="50" fill="#b45309" rx="2"/>
+                <circle cx="28" cy="28" r="7" fill="#38bdf8"/>
+                <circle cx="72" cy="72" r="7" fill="#ef4444"/>
+                <circle cx="72" cy="28" r="7" fill="#f59e0b"/>
+            </svg>
+            <div class="brand-title">
+                <h1>Pak Warriors Tactical Simulator</h1>
+                <span>Meraparcel.pk</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard">
+        
+        <!-- Left Panel: Parameters -->
+        <div class="panel">
+            <div class="panel-header">Deployment Parameters</div>
+            <div class="panel-content">
+                
+                <div class="control-group">
+                    <label>Match Format & Phase</label>
+                    <select id="param-phase" class="control-select" onchange="Engine.render()">
+                        <option value="t20_powerplay">T20: Powerplay (Overs 1-6)</option>
+                        <option value="t20_middle">T20: Middle Overs (Overs 7-15)</option>
+                        <option value="t20_death">T20: Death Overs (Overs 16-20)</option>
+                        <option value="test_attacking">Test Match: Attacking Field</option>
+                        <option value="test_defensive">Test Match: Run Saver</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>Bowler Profile</label>
+                    <select id="param-bowler" class="control-select" onchange="Engine.render()">
+                        <option value="pace">Pace / Seam / Swing</option>
+                        <option value="spin">Spin (Off / Leg / Left-Arm)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>Batter Stance</label>
+                    <div class="radio-group">
+                        <div class="radio-btn active" id="btn-lhb" onclick="Engine.setBatter('LHB')">Left-Handed</div>
+                        <div class="radio-btn" id="btn-rhb" onclick="Engine.setBatter('RHB')">Right-Handed</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1rem; padding: 1.25rem; background: var(--bg-dark); border-radius: 6px; border: 1px solid var(--border);">
+                    <div style="font-size: 0.75rem; font-weight: bold; color: var(--text-main); margin-bottom: 0.8rem; text-transform: uppercase;">Fielding Zones</div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">
+                        <div class="role-indicator" style="background: var(--fielder-close)"></div> Close Catching Cordon
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); margin-top: 0.75rem;">
+                        <div class="role-indicator" style="background: var(--fielder-inner)"></div> 30-Yard Inner Ring
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); margin-top: 0.75rem;">
+                        <div class="role-indicator" style="background: var(--fielder-boundary)"></div> Boundary Riders (Max 5)
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Center Panel: Visualization -->
+        <div class="panel">
+            <div class="panel-header">
+                <span id="canvas-header-title">Field Visualization Matrix</span>
+                <span id="stance-badge" style="color: var(--primary); font-weight: 700;">LHB</span>
+            </div>
+            <div class="field-container">
+                <svg class="svg-field" viewBox="0 0 800 800" id="field-canvas">
+                    
+                    <!-- Outfield -->
+                    <circle cx="400" cy="400" r="380" fill="var(--grass-light)" stroke="#22c55e" stroke-width="2"/>
+                    <circle cx="400" cy="400" r="360" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-dasharray="10,6"/>
+                    
+                    <!-- 30-Yard Inner Circle -->
+                    <circle cx="400" cy="400" r="210" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
+                    
+                    <!-- Pitch Area -->
+                    <rect x="375" y="300" width="50" height="200" fill="var(--pitch)" rx="3"/>
+                    <line x1="360" y1="460" x2="440" y2="460" stroke="#fff" stroke-width="2.5"/>
+                    <line x1="360" y1="340" x2="440" y2="340" stroke="#fff" stroke-width="2.5"/>
+                    <rect x="392" y="475" width="16" height="4" fill="#fff"/>
+                    <rect x="392" y="321" width="16" height="4" fill="#fff"/>
+
+                    <!-- Off/Leg Identifiers -->
+                    <g id="zone-labels">
+                        <text x="70" y="400" fill="rgba(255,255,255,0.15)" font-size="28" font-weight="800" id="label-left" text-anchor="middle" transform="rotate(-90 70,400)">OFF SIDE</text>
+                        <text x="730" y="400" fill="rgba(255,255,255,0.15)" font-size="28" font-weight="800" id="label-right" text-anchor="middle" transform="rotate(90 730,400)">LEG SIDE</text>
+                    </g>
+
+                    <g id="fielders-layer"></g>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Right Panel: Strategic Roster -->
+        <div class="panel">
+            <div class="panel-header">Tactical Rationale & Roster</div>
+            <div class="panel-content">
+                
+                <div class="rationale-box">
+                    <h3 id="strategy-title">Loading...</h3>
+                    <p id="strategy-desc">Initializing tactical framework...</p>
+                </div>
+
+                <div class="table-container">
+                    <table class="roster-table">
+                        <thead>
+                            <tr>
+                                <th width="15%">#</th>
+                                <th width="40%">Position Name</th>
+                                <th width="45%">Zonal Role</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roster-body"></tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STRAT_MATRIX = {
+            't20_powerplay_pace': {
+                title: "Powerplay Pace - 2 Boundary Riders",
+                desc: "Strictly attacking field. 2 boundary riders protecting Third Man and Fine Leg. Infield packed to prevent easy singles and invite the high-risk lofted drive over the infield.",
+                positions: [
+                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
+                    { id: 2, name: "Wicket Keeper", x: 400, y: 530, role: "close" },
+                    { id: 3, name: "First Slip", x: 370, y: 510, role: "close" },
+                    { id: 4, name: "Point", x: 230, y: 460, role: "inner" },
+                    { id: 5, name: "Cover", x: 250, y: 340, role: "inner" },
+                    { id: 6, name: "Mid Off", x: 330, y: 260, role: "inner" },
+                    { id: 7, name: "Mid On", x: 470, y: 260, role: "inner" },
+                    { id: 8, name: "Mid Wicket", x: 550, y: 360, role: "inner" },
+                    { id: 9, name: "Square Leg", x: 580, y: 460, role: "inner" },
+                    { id: 10, name: "Deep Third", x: 190, y: 640, role: "boundary" },
+                    { id: 11, name: "Deep Fine Leg", x: 590, y: 660, role: "boundary" }
+                ]
+            },
+            't20_powerplay_spin': {
+                title: "Powerplay Spin - Ring Trap",
+                desc: "Removes slips to pack the square off-side ring. Forces the batsman to generate their own pace over the leg side. Only 2 boundary protectors permitted.",
+                positions: [
+                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
+                    { id: 2, name: "Wicket Keeper", x: 400, y: 500, role: "close" },
+                    { id: 3, name: "Backward Point", x: 220, y: 490, role: "inner" },
+                    { id: 4, name: "Extra Cover", x: 260, y: 320, role: "inner" },
+                    { id: 5, name: "Mid Off", x: 350, y: 260, role: "inner" },
+                    { id: 6, name: "Mid On", x: 460, y: 260, role: "inner" },
+                    { id: 7, name: "Mid Wicket", x: 550, y: 370, role: "inner" },
+                    { id: 8, name: "Short Fine Leg", x: 500, y: 550, role: "inner" },
+                    { id: 9, name: "Short Third", x: 300, y: 550, role: "inner" },
+                    { id: 10, name: "Deep Square Leg", x: 710, y: 460, role: "boundary" },
+                    { id: 11, name: "Deep Cover", x: 90, y: 380, role: "boundary" }
+                ]
+            },
+            't20_middle_pace': {
+                title: "Middle Overs Pace - 5 Boundary Riders",
+                desc: "Pushes exactly 5 fielders back to the boundary to manage the run rate. Inner-ring fielders protect the edges of the 30-yard circle to cut off hard-hit placement shots.",
+                positions: [
+                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
+                    { id: 2, name: "Wicket Keeper", x: 400, y: 530, role: "close" },
+                    { id: 3, name: "Point", x: 220, y: 460, role: "inner" },
+                    { id: 4, name: "Short Third", x: 300, y: 550, role: "inner" },
+                    { id: 5, name: "Extra Cover", x: 260, y: 320, role: "inner" },
+                    { id: 6, name: "Short Fine Leg", x: 490, y: 560, role: "inner" },
+                    { id: 7, name: "Deep Cover", x: 90, y: 370, role: "boundary" },
+                    { id: 8, name: "Long Off", x: 280, y: 80, role: "boundary" },
+                    { id: 9, name: "Long On", x: 520, y: 80, role: "boundary" },
+                    { id: 10, name: "Deep Mid Wicket", x: 700, y: 320, role: "boundary" },
+                    { id: 11, name: "Deep Square Leg", x: 700, y: 480, role: "boundary" }
+                ]
+            },
+            't20_middle_spin': {
+                title: "Middle Overs Spin - Straight Protection",
+                desc: "Protects against the slog sweep and straight drive with 5 designated outfielders. Inner-circle sweepers drop deep within the ring to allow reaction time.",
+                positions: [
+                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
+                    { id: 2, name: "Wicket Keeper", x: 400, y: 500, role: "close" },
+                    { id: 3, name: "Backward Point", x: 230, y: 480, role: "inner" },
+                    { id: 4, name: "Extra Cover", x: 250, y: 330, role: "inner" },
+                    { id: 5, name: "Short Third", x: 310, y: 540, role: "inner" },
+                    { id: 6, name: "Short Mid Wicket", x: 500, y: 380, role: "inner" },
+                    { id: 7, name: "Long Off", x: 280, y: 80, role: "boundary" },
+                    { id: 8, name: "Long On", x: 520, y: 80, role: "boundary" },
+                    { id: 9, name: "Deep Mid Wicket", x: 690, y: 300, role: "boundary" },
+                    { id: 10, name: "Deep Square Leg", x: 700, y: 460, role: "boundary" },
+                    { id: 11, name: "Deep Cover", x: 90, y: 400, role: "boundary" }
+                ]
+            },
+            't20_death_pace': {
+                title: "Death Overs Pace - Yorker Execution (Max 5)",
+                desc: "Exactly 5 boundary riders (Long Off, Long On, Deep Mid Wicket, Deep Square Leg, Deep Point). The remaining 4 fielders patrol the inner ring against the dab and scoop.",
+                positions: [
+                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
+                    { id: 2, name: "Wicket Keeper", x: 400, y: 530, role: "close" },
+                    { id: 3, name: "Short Third", x: 290, y: 550, role: "inner" },
+                    { id: 4, name: "Extra Cover", x: 250, y: 320, role: "inner" },
+                    { id: 5, name: "Short Fine Leg", x: 510, y: 560, role: "inner" },
+                    { id: 6, name: "Point", x: 220, y: 460, role: "inner" }, 
+                    { id: 7, name: "Deep Point", x: 100, y: 460, role: "boundary" },
+                    { id: 8, name: "Long Off", x: 280, y: 80, role: "boundary" },
+                    { id: 9, name: "Long On", x: 520, y: 80, role: "boundary" },
+                    { id: 10, name: "Deep Mid Wicket", x: 690, y: 320, role: "boundary" },
+                    { id: 11, name: "Deep Square Leg", x: 670, y: 490, role: "boundary" }
+                ]
+            },
+            't20_death_spin': {
+                title: "Death Overs Spin - Wide Line Defense (Max 5)",
+                desc: "Bowler bowls flat and wide of off-stump. 5 boundary catchers primarily protecting the V and off-side sweep arcs.",
+                positions: [
+                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
+                    { id: 2, name: "Wicket Keeper", x: 400, y: 500, role: "close" },
+                    { id: 3, name: "Point", x: 220, y: 460, role: "inner" },
+                    { id: 4, name: "Short Third", x: 300, y: 550, role: "inner" },
+                    { id: 5, name: "Mid Wicket", x: 540, y: 370, role: "inner" },
+                    { id: 6, name: "Short Fine Leg", x: 510, y: 550, role: "inner" },
+                    { id: 7, name: "Deep Cover", x: 100, y: 380, role: "boundary" },
+                    { id: 8, name: "Long Off", x: 280, y: 80, role: "boundary" },
+                    { id: 9, name: "Long On", x: 520, y: 80, role: "boundary" },
+                    { id: 10, name: "Deep Mid Wicket", x: 690, y: 300, role: "boundary" },
+                    { id: 11, name: "Deep Square Leg", x: 680, y: 480, role: "boundary" }
+                ]
+            },
+            'test_attacking_pace': {
+                title: "Test New Ball - 3 Slips & Gully",
+                desc: "Standard red-ball aggressive cordon. 3 Slips, Gully, and technical inner-ring fielders designed to induce and catch the edged drive. Zero boundary riders.",
+                positions: [
+                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
+                    { id: 2, name: "Wicket Keeper", x: 400, y: 550, role: "close" },
+                    { id: 3, name: "First Slip", x: 370, y: 540, role: "close" },
+                    { id: 4, name: "Second Slip", x: 350, y: 530, role: "close" },
+                    { id: 5, name: "Third Slip", x: 330, y: 520, role: "close" },
+                    { id: 6, name: "Gully", x: 290, y: 490, role: "inner" },
+                    { id: 7, name: "Point", x: 220, y: 460, role: "inner" },
+                    { id: 8, name: "Cover", x: 260, y: 340, role: "inner" },
+                    { id: 9, name: "Mid Off", x: 350, y: 260, role: "inner" },
+                    { id: 10, name: "Mid On", x: 450, y: 260, role: "inner" },
+                    { id: 11, name: "Square Leg", x: 550, y: 460, role: "inner" }
+                ]
+            },
+            'test_attacking_spin': {
+                title: "Test Spin - Bat-Pad Trap",
+                desc: "Surrounding the bat. Inner-circle fielders are positioned aggressively close (Short Leg, Silly Point) to capitalize on bat-pad deflections and subtle edges.",
+                positions: [
+                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
+                    { id: 2, name: "Wicket Keeper", x: 400, y: 500, role: "close" },
+                    { id: 3, name: "Slip", x: 360, y: 490, role: "close" },
+                    { id: 4, name: "Short Leg", x: 440, y: 440, role: "close" },
+                    { id: 5, name: "Silly Point", x: 340, y: 440, role: "close" },
+                    { id: 6, name: "Point", x: 240, y: 460, role: "inner" },
+                    { id: 7, name: "Cover", x: 280, y: 340, role: "inner" },
+                    { id: 8, name: "Mid Off", x: 360, y: 280, role: "inner" },
+                    { id: 9, name: "Mid On", x: 440, y: 280, role: "inner" },
+                    { id: 10, name: "Mid Wicket", x: 530, y: 370, role: "inner" },
+                    { id: 11, name: "Square Leg", x: 550, y: 470, role: "inner" }
+                ]
+            },
+            'test_defensive_pace': {
+                title: "Test Old Ball - Run Saver",
+                desc: "Deployed during high-scoring partnerships. Spreads boundary fielders to plug scoring arcs, removing slips and pushing the inner-circle ring deep.",
+                positions: [
+                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
+                    { id: 2, name: "Wicket Keeper", x: 400, y: 540, role: "close" },
+                    { id: 3, name: "Point", x: 220, y: 460, role: "inner" },
+                    { id: 4, name: "Cover", x: 260, y: 340, role: "inner" },
+                    { id: 5, name: "Mid Off", x: 340, y: 260, role: "inner" },
+                    { id: 6, name: "Mid On", x: 460, y: 260, role: "inner" },
+                    { id: 7, name: "Deep Cover", x: 100, y: 380, role: "boundary" },
+                    { id: 8, name: "Deep Point", x: 100, y: 500, role: "boundary" },
+                    { id: 9, name: "Deep Square Leg", x: 670, y: 480, role: "boundary" },
+                    { id: 10, name: "Deep Mid Wicket", x: 680, y: 340, role: "boundary" },
+                    { id: 11, name: "Deep Fine Leg", x: 600, y: 660, role: "boundary" }
+                ]
+            },
+            'test_defensive_spin': {
+                title: "Test Spin - Boundary Containment",
+                desc: "Heavy boundary protection straight down the ground. Slips are removed in favor of sweepers to restrict easy singles and boundaries on turning tracks.",
+                positions: [
+                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
+                    { id: 2, name: "Wicket Keeper", x: 400, y: 500, role: "close" },
+                    { id: 3, name: "Point", x: 230, y: 460, role: "inner" },
+                    { id: 4, name: "Cover", x: 270, y: 340, role: "inner" },
+                    { id: 5, name: "Square Leg", x: 550, y: 460, role: "inner" },
+                    { id: 6, name: "Long Off", x: 290, y: 90, role: "boundary" },
+                    { id: 7, name: "Long On", x: 510, y: 90, role: "boundary" },
+                    { id: 8, name: "Deep Mid Wicket", x: 680, y: 320, role: "boundary" },
+                    { id: 9, name: "Deep Square Leg", x: 680, y: 500, role: "boundary" },
+                    { id: 10, name: "Deep Point", x: 110, y: 480, role: "boundary" },
+                    { id: 11, name: "Deep Cover", x: 110, y: 360, role: "boundary" }
+                ]
+            }
+        };
+
+        const Engine = {
+            stance: 'LHB',
+
+            init() {
+                this.svgLayer = document.getElementById('fielders-layer');
+                this.rosterBody = document.getElementById('roster-body');
+                
+                for (let i = 1; i <= 11; i++) {
+                    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('id', `node-dot-${i}`);
+                    circle.setAttribute('r', '12');
+                    circle.setAttribute('class', 'fielder-node');
+                    circle.setAttribute('stroke', '#0f172a');
+                    circle.setAttribute('stroke-width', '2');
+                    
+                    const idText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    idText.setAttribute('id', `node-id-${i}`);
+                    idText.setAttribute('class', 'fielder-label');
+                    idText.setAttribute('fill', '#ffffff');
+                    idText.setAttribute('font-size', '10');
+                    idText.setAttribute('font-weight', 'bold');
+                    idText.setAttribute('text-anchor', 'middle');
+                    idText.setAttribute('dy', '4');
+                    idText.textContent = i;
+
+                    const labelBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    labelBg.setAttribute('id', `node-bg-${i}`);
+                    labelBg.setAttribute('class', 'field-label-bg');
+                    labelBg.setAttribute('fill', 'rgba(15, 23, 42, 0.75)');
+                    labelBg.setAttribute('rx', '4');
+                    labelBg.setAttribute('height', '18');
+
+                    const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    nameText.setAttribute('id', `node-name-${i}`);
+                    nameText.setAttribute('class', 'fielder-label');
+                    nameText.setAttribute('fill', '#e2e8f0');
+                    nameText.setAttribute('font-size', '11');
+                    nameText.setAttribute('font-weight', '600');
+                    nameText.setAttribute('text-anchor', 'middle');
+                    nameText.setAttribute('dy', '-17');
+
+                    group.appendChild(labelBg);
+                    group.appendChild(circle);
+                    group.appendChild(idText);
+                    group.appendChild(nameText);
+                    this.svgLayer.appendChild(group);
+                }
+                this.updateTeam();
+                this.render();
+            },
+
+            updateTeam() {
+                const selector = document.getElementById('team-selector');
+                const selectedOption = selector.options[selector.selectedIndex];
+                const color = selectedOption.getAttribute('data-color');
+                
+                document.getElementById('team-dot').style.backgroundColor = color;
+                document.getElementById('team-dot').style.boxShadow = `0 0 8px ${color}`;
+            },
+
+            setBatter(type) {
+                this.stance = type;
+                document.getElementById('btn-lhb').classList.toggle('active', type === 'LHB');
+                document.getElementById('btn-rhb').classList.toggle('active', type === 'RHB');
+                document.getElementById('stance-badge').textContent = type;
+                
+                const labelLeft = document.getElementById('label-left');
+                const labelRight = document.getElementById('label-right');
+                
+                if (type === 'RHB') {
+                    labelLeft.textContent = "LEG SIDE";
+                    labelRight.textContent = "OFF SIDE";
+                } else {
+                    labelLeft.textContent = "OFF SIDE";
+                    labelRight.textContent = "LEG SIDE";
+                }
+                
+                this.render();
+            },
+
+            getZonalColor(role) {
+                if (role === 'close') return 'var(--fielder-close)';
+                if (role === 'inner') return 'var(--fielder-inner)';
+                return 'var(--fielder-boundary)';
+            },
+
+            render() {
+                const phase = document.getElementById('param-phase').value;
+                const bowler = document.getElementById('param-bowler').value;
+                const strategyKey = `${phase}_${bowler}`;
+                
+                const preset = STRAT_MATRIX[strategyKey] || STRAT_MATRIX['t20_powerplay_pace'];
+                
+                document.getElementById('strategy-title').textContent = preset.title;
+                document.getElementById('strategy-desc').textContent = preset.desc;
+                this.rosterBody.innerHTML = '';
+
+                preset.positions.forEach(pos => {
+                    let renderX = pos.x;
+                    
+                    if (this.stance === 'RHB' && pos.id > 2) { 
+                        renderX = 800 - pos.x; 
+                    }
+
+                    const dot = document.getElementById(`node-dot-${pos.id}`);
+                    const idTxt = document.getElementById(`node-id-${pos.id}`);
+                    const bg = document.getElementById(`node-bg-${pos.id}`);
+                    const nameTxt = document.getElementById(`node-name-${pos.id}`);
+
+                    dot.setAttribute('cx', renderX);
+                    dot.setAttribute('cy', pos.y);
+                    dot.setAttribute('fill', this.getZonalColor(pos.role));
+
+                    idTxt.setAttribute('x', renderX);
+                    idTxt.setAttribute('y', pos.y);
+
+                    nameTxt.setAttribute('x', renderX);
+                    nameTxt.setAttribute('y', pos.y);
+                    nameTxt.textContent = pos.name;
+
+                    const textLength = pos.name.length * 6.8; 
+                    bg.setAttribute('width', textLength + 10);
+                    bg.setAttribute('x', renderX - (textLength / 2) - 5);
+                    bg.setAttribute('y', pos.y - 29);
+
+                    const tr = document.createElement('tr');
+                    const roleText = pos.role === 'close' ? 'Close Catching' : pos.role === 'inner' ? 'Inner Ring' : 'Boundary Rider';
+                    
+                    tr.innerHTML = `
+                        <td><strong>${pos.id}</strong></td>
+                        <td style="font-weight: 500; color: #f8fafc;">${pos.name}</td>
+                        <td>
+                            <div style="display: flex; align-items: center;">
+                                <span class="role-indicator" style="background: ${this.getZonalColor(pos.role)}"></span>
+                                <span style="color: var(--text-muted);">${roleText}</span>
+                            </div>
+                        </td>
+                    `;
+                    this.rosterBody.appendChild(tr);
+                });
+            }
+        };
+
+        window.onload = () => Engine.init();
+    </script>
+</body>
+</html>
