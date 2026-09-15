@@ -256,6 +256,161 @@
         .fielder-label { transition: x 0.5s ease-in-out, y 0.5s ease-in-out; pointer-events: none; }
         .field-label-bg { transition: x 0.5s ease-in-out, y 0.5s ease-in-out; }
 
+        .player-assignment-panel {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .player-assignment-panel h3 {
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .player-assignment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            max-height: 360px;
+            overflow-y: auto;
+            padding-right: 0.2rem;
+        }
+
+        .player-assign-row {
+            display: grid;
+            grid-template-columns: 1fr 150px;
+            gap: 0.5rem;
+            align-items: center;
+            padding: 0.45rem 0.5rem;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+
+        .player-assign-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .player-assign-row select {
+            width: 100%;
+            background: var(--surface);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.45rem 0.4rem;
+            font-size: 0.72rem;
+        }
+
+        .action-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+            margin-top: 0.2rem;
+        }
+
+        .action-btn {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            padding: 0.8rem 0.6rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.7px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn.primary {
+            background: var(--primary);
+            color: #03121d;
+            border-color: var(--primary);
+        }
+
+        .action-btn:hover {
+            filter: brightness(1.05);
+        }
+
+        .fielder-popover {
+            position: absolute;
+            min-width: 200px;
+            background: rgba(15, 23, 42, 0.96);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+            padding: 0.8rem 0.9rem;
+            z-index: 20;
+            pointer-events: auto;
+        }
+
+        .fielder-popover.hidden {
+            display: none;
+        }
+
+        .fielder-popover h4 {
+            color: var(--primary);
+            margin-bottom: 0.45rem;
+            font-size: 0.95rem;
+        }
+
+        .fielder-popover .detail {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin: 0.35rem 0;
+        }
+
+        .fielder-popover .detail strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .fielder-popover button {
+            margin-top: 0.7rem;
+            width: 100%;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 0.55rem 0.5rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .status-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.94);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 0.65rem 1rem;
+            color: var(--text-main);
+            font-size: 0.72rem;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 50;
+        }
+
+        .status-toast.visible {
+            opacity: 1;
+        }
+
         @media (max-width: 1100px) {
             .dashboard {
                 grid-template-columns: 300px 1fr;
@@ -358,6 +513,19 @@
                     </div>
                 </div>
 
+                <div class="player-assignment-panel">
+                    <h3>Player Assignment</h3>
+                    <div id="player-assignment-list" class="player-assignment-list"></div>
+                    <div style="margin-top: 0.2rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.55rem;">Reserve Players</div>
+                        <div id="available-player-list" style="display: flex; flex-wrap: wrap; gap: 0.4rem; min-height: 28px;"></div>
+                    </div>
+                    <div class="action-row">
+                        <button id="btn-reset-field" class="action-btn primary" type="button">Reset Field</button>
+                        <button id="btn-auto-assign" class="action-btn" type="button">Auto Assign</button>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -367,7 +535,8 @@
                 <span id="canvas-header-title">Field Visualization Matrix</span>
                 <span id="stance-badge" style="color: var(--primary); font-weight: 700;">LHB</span>
             </div>
-            <div class="field-container">
+            <div class="field-container" id="field-container">
+                <div id="fielder-popover" class="fielder-popover hidden"></div>
                 <svg class="svg-field" viewBox="0 0 800 800" id="field-canvas">
                     
                     <!-- Outfield -->
@@ -409,9 +578,10 @@
                     <table class="roster-table">
                         <thead>
                             <tr>
-                                <th width="15%">#</th>
-                                <th width="40%">Position Name</th>
-                                <th width="45%">Zonal Role</th>
+                                <th width="12%">#</th>
+                                <th width="38%">Player</th>
+                                <th width="30%">Position</th>
+                                <th width="20%">Zonal Role</th>
                             </tr>
                         </thead>
                         <tbody id="roster-body"></tbody>
@@ -422,324 +592,1065 @@
         </div>
     </div>
 
+    <div id="status-toast" class="status-toast"></div>
+
     <script>
+        const PLAYERS = [
+            { id: 'aziz', name: 'Aziz' },
+            { id: 'umaid', name: 'Umaid' },
+            { id: 'fahad', name: 'Fahad' },
+            { id: 'hassam', name: 'Hassam', role: 'wicketKeeper' },
+            { id: 'bilal', name: 'Bilal' },
+            { id: 'shehryar', name: 'Shehryar' },
+            { id: 'affan', name: 'Affan' },
+            { id: 'shariq', name: 'Shariq' },
+            { id: 'umair', name: 'Umair' },
+            { id: 'farooq', name: 'Farooq' },
+            { id: 'nadir', name: 'Nadir' },
+            { id: 'abdul-basit', name: 'Abdul Basit' },
+            { id: 'hamza-iftekhar', name: 'Hamza Iftekhar' },
+            { id: 'hziq', name: 'Hziq' }
+        ];
+
+        const PLAYER_BY_ID = Object.fromEntries(PLAYERS.map(player => [player.id, player]));
+        const WICKET_KEEPER_ID = 'hassam';
+        const FIELD_RADIUS = 360;
+        const FIELD_POSITION_NAMES = [
+            'Bowler', 'Wicket Keeper', 'Point', 'Deep Point', 'Cover', 'Deep Cover', 'Mid Off', 'Long Off',
+            'Mid On', 'Long On', 'Mid Wicket', 'Deep Mid Wicket', 'Square Leg', 'Deep Square Leg', 'Fine Leg',
+            'Deep Fine Leg', 'Third Man', 'Deep Third', 'Short Fine Leg', 'Short Third', 'Backward Point', 'Extra Cover',
+            'First Slip', 'Second Slip', 'Third Slip', 'Gully', 'Slip', 'Short Leg', 'Silly Point', 'Short Mid Wicket'
+        ];
+
         const STRAT_MATRIX = {
             't20_powerplay_pace': {
-                title: "Powerplay Pace - 2 Boundary Riders",
-                desc: "Strictly attacking field. 2 boundary riders protecting Third Man and Fine Leg. Infield packed to prevent easy singles and invite the high-risk lofted drive over the infield.",
+                title: 'Powerplay Pace - 2 Boundary Riders',
+                desc: 'Strictly attacking field. 2 boundary riders protecting Third Man and Fine Leg. Infield packed to prevent easy singles and invite the high-risk lofted drive over the infield.',
                 positions: [
-                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
-                    { id: 2, name: "Wicket Keeper", x: 400, y: 530, role: "close" },
-                    { id: 3, name: "First Slip", x: 370, y: 510, role: "close" },
-                    { id: 4, name: "Point", x: 230, y: 460, role: "inner" },
-                    { id: 5, name: "Cover", x: 250, y: 340, role: "inner" },
-                    { id: 6, name: "Mid Off", x: 330, y: 260, role: "inner" },
-                    { id: 7, name: "Mid On", x: 470, y: 260, role: "inner" },
-                    { id: 8, name: "Mid Wicket", x: 550, y: 360, role: "inner" },
-                    { id: 9, name: "Square Leg", x: 580, y: 460, role: "inner" },
-                    { id: 10, name: "Deep Third", x: 190, y: 640, role: "boundary" },
-                    { id: 11, name: "Deep Fine Leg", x: 590, y: 660, role: "boundary" }
+                    { id: 1, name: 'Bowler', x: 400, y: 310, role: 'close' },
+                    { id: 2, name: 'Wicket Keeper', x: 400, y: 530, role: 'close' },
+                    { id: 3, name: 'First Slip', x: 370, y: 510, role: 'close' },
+                    { id: 4, name: 'Point', x: 230, y: 460, role: 'inner' },
+                    { id: 5, name: 'Cover', x: 250, y: 340, role: 'inner' },
+                    { id: 6, name: 'Mid Off', x: 330, y: 260, role: 'inner' },
+                    { id: 7, name: 'Mid On', x: 470, y: 260, role: 'inner' },
+                    { id: 8, name: 'Mid Wicket', x: 550, y: 360, role: 'inner' },
+                    { id: 9, name: 'Square Leg', x: 580, y: 460, role: 'inner' },
+                    { id: 10, name: 'Deep Third', x: 190, y: 640, role: 'boundary' },
+                    { id: 11, name: 'Deep Fine Leg', x: 590, y: 660, role: 'boundary' }
                 ]
             },
             't20_powerplay_spin': {
-                title: "Powerplay Spin - Ring Trap",
-                desc: "Removes slips to pack the square off-side ring. Forces the batsman to generate their own pace over the leg side. Only 2 boundary protectors permitted.",
+                title: 'Powerplay Spin - Ring Trap',
+                desc: 'Removes slips to pack the square off-side ring. Forces the batsman to generate their own pace over the leg side. Only 2 boundary protectors permitted.',
                 positions: [
-                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
-                    { id: 2, name: "Wicket Keeper", x: 400, y: 500, role: "close" },
-                    { id: 3, name: "Backward Point", x: 220, y: 490, role: "inner" },
-                    { id: 4, name: "Extra Cover", x: 260, y: 320, role: "inner" },
-                    { id: 5, name: "Mid Off", x: 350, y: 260, role: "inner" },
-                    { id: 6, name: "Mid On", x: 460, y: 260, role: "inner" },
-                    { id: 7, name: "Mid Wicket", x: 550, y: 370, role: "inner" },
-                    { id: 8, name: "Short Fine Leg", x: 500, y: 550, role: "inner" },
-                    { id: 9, name: "Short Third", x: 300, y: 550, role: "inner" },
-                    { id: 10, name: "Deep Square Leg", x: 710, y: 460, role: "boundary" },
-                    { id: 11, name: "Deep Cover", x: 90, y: 380, role: "boundary" }
+                    { id: 1, name: 'Bowler', x: 400, y: 310, role: 'close' },
+                    { id: 2, name: 'Wicket Keeper', x: 400, y: 500, role: 'close' },
+                    { id: 3, name: 'Backward Point', x: 220, y: 490, role: 'inner' },
+                    { id: 4, name: 'Extra Cover', x: 260, y: 320, role: 'inner' },
+                    { id: 5, name: 'Mid Off', x: 350, y: 260, role: 'inner' },
+                    { id: 6, name: 'Mid On', x: 460, y: 260, role: 'inner' },
+                    { id: 7, name: 'Mid Wicket', x: 550, y: 370, role: 'inner' },
+                    { id: 8, name: 'Short Fine Leg', x: 500, y: 550, role: 'inner' },
+                    { id: 9, name: 'Short Third', x: 300, y: 550, role: 'inner' },
+                    { id: 10, name: 'Deep Square Leg', x: 710, y: 460, role: 'boundary' },
+                    { id: 11, name: 'Deep Cover', x: 90, y: 380, role: 'boundary' }
                 ]
             },
             't20_middle_pace': {
-                title: "Middle Overs Pace - 5 Boundary Riders",
-                desc: "Pushes exactly 5 fielders back to the boundary to manage the run rate. Inner-ring fielders protect the edges of the 30-yard circle to cut off hard-hit placement shots.",
+                title: 'Middle Overs Pace - 5 Boundary Riders',
+                desc: 'Pushes exactly 5 fielders back to the boundary to manage the run rate. Inner-ring fielders protect the edges of the 30-yard circle to cut off hard-hit placement shots.',
                 positions: [
-                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
-                    { id: 2, name: "Wicket Keeper", x: 400, y: 530, role: "close" },
-                    { id: 3, name: "Point", x: 220, y: 460, role: "inner" },
-                    { id: 4, name: "Short Third", x: 300, y: 550, role: "inner" },
-                    { id: 5, name: "Extra Cover", x: 260, y: 320, role: "inner" },
-                    { id: 6, name: "Short Fine Leg", x: 490, y: 560, role: "inner" },
-                    { id: 7, name: "Deep Cover", x: 90, y: 370, role: "boundary" },
-                    { id: 8, name: "Long Off", x: 280, y: 80, role: "boundary" },
-                    { id: 9, name: "Long On", x: 520, y: 80, role: "boundary" },
-                    { id: 10, name: "Deep Mid Wicket", x: 700, y: 320, role: "boundary" },
-                    { id: 11, name: "Deep Square Leg", x: 700, y: 480, role: "boundary" }
+                    { id: 1, name: 'Bowler', x: 400, y: 310, role: 'close' },
+                    { id: 2, name: 'Wicket Keeper', x: 400, y: 530, role: 'close' },
+                    { id: 3, name: 'Point', x: 220, y: 460, role: 'inner' },
+                    { id: 4, name: 'Short Third', x: 300, y: 550, role: 'inner' },
+                    { id: 5, name: 'Extra Cover', x: 260, y: 320, role: 'inner' },
+                    { id: 6, name: 'Short Fine Leg', x: 490, y: 560, role: 'inner' },
+                    { id: 7, name: 'Deep Cover', x: 90, y: 370, role: 'boundary' },
+                    { id: 8, name: 'Long Off', x: 280, y: 80, role: 'boundary' },
+                    { id: 9, name: 'Long On', x: 520, y: 80, role: 'boundary' },
+                    { id: 10, name: 'Deep Mid Wicket', x: 700, y: 320, role: 'boundary' },
+                    { id: 11, name: 'Deep Square Leg', x: 700, y: 480, role: 'boundary' }
                 ]
             },
             't20_middle_spin': {
-                title: "Middle Overs Spin - Straight Protection",
-                desc: "Protects against the slog sweep and straight drive with 5 designated outfielders. Inner-circle sweepers drop deep within the ring to allow reaction time.",
+                title: 'Middle Overs Spin - Straight Protection',
+                desc: 'Protects against the slog sweep and straight drive with 5 designated outfielders. Inner-circle sweepers drop deep within the ring to allow reaction time.',
                 positions: [
-                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
-                    { id: 2, name: "Wicket Keeper", x: 400, y: 500, role: "close" },
-                    { id: 3, name: "Backward Point", x: 230, y: 480, role: "inner" },
-                    { id: 4, name: "Extra Cover", x: 250, y: 330, role: "inner" },
-                    { id: 5, name: "Short Third", x: 310, y: 540, role: "inner" },
-                    { id: 6, name: "Short Mid Wicket", x: 500, y: 380, role: "inner" },
-                    { id: 7, name: "Long Off", x: 280, y: 80, role: "boundary" },
-                    { id: 8, name: "Long On", x: 520, y: 80, role: "boundary" },
-                    { id: 9, name: "Deep Mid Wicket", x: 690, y: 300, role: "boundary" },
-                    { id: 10, name: "Deep Square Leg", x: 700, y: 460, role: "boundary" },
-                    { id: 11, name: "Deep Cover", x: 90, y: 400, role: "boundary" }
+                    { id: 1, name: 'Bowler', x: 400, y: 310, role: 'close' },
+                    { id: 2, name: 'Wicket Keeper', x: 400, y: 500, role: 'close' },
+                    { id: 3, name: 'Backward Point', x: 230, y: 480, role: 'inner' },
+                    { id: 4, name: 'Extra Cover', x: 250, y: 330, role: 'inner' },
+                    { id: 5, name: 'Short Third', x: 310, y: 540, role: 'inner' },
+                    { id: 6, name: 'Short Mid Wicket', x: 500, y: 380, role: 'inner' },
+                    { id: 7, name: 'Long Off', x: 280, y: 80, role: 'boundary' },
+                    { id: 8, name: 'Long On', x: 520, y: 80, role: 'boundary' },
+                    { id: 9, name: 'Deep Mid Wicket', x: 690, y: 300, role: 'boundary' },
+                    { id: 10, name: 'Deep Square Leg', x: 700, y: 460, role: 'boundary' },
+                    { id: 11, name: 'Deep Cover', x: 90, y: 400, role: 'boundary' }
                 ]
             },
             't20_death_pace': {
-                title: "Death Overs Pace - Yorker Execution (Max 5)",
-                desc: "Exactly 5 boundary riders (Long Off, Long On, Deep Mid Wicket, Deep Square Leg, Deep Point). The remaining 4 fielders patrol the inner ring against the dab and scoop.",
+                title: 'Death Overs Pace - Yorker Execution (Max 5)',
+                desc: 'Exactly 5 boundary riders (Long Off, Long On, Deep Mid Wicket, Deep Square Leg, Deep Point). The remaining 4 fielders patrol the inner ring against the dab and scoop.',
                 positions: [
-                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
-                    { id: 2, name: "Wicket Keeper", x: 400, y: 530, role: "close" },
-                    { id: 3, name: "Short Third", x: 290, y: 550, role: "inner" },
-                    { id: 4, name: "Extra Cover", x: 250, y: 320, role: "inner" },
-                    { id: 5, name: "Short Fine Leg", x: 510, y: 560, role: "inner" },
-                    { id: 6, name: "Point", x: 220, y: 460, role: "inner" }, 
-                    { id: 7, name: "Deep Point", x: 100, y: 460, role: "boundary" },
-                    { id: 8, name: "Long Off", x: 280, y: 80, role: "boundary" },
-                    { id: 9, name: "Long On", x: 520, y: 80, role: "boundary" },
-                    { id: 10, name: "Deep Mid Wicket", x: 690, y: 320, role: "boundary" },
-                    { id: 11, name: "Deep Square Leg", x: 670, y: 490, role: "boundary" }
+                    { id: 1, name: 'Bowler', x: 400, y: 310, role: 'close' },
+                    { id: 2, name: 'Wicket Keeper', x: 400, y: 530, role: 'close' },
+                    { id: 3, name: 'Short Third', x: 290, y: 550, role: 'inner' },
+                    { id: 4, name: 'Extra Cover', x: 250, y: 320, role: 'inner' },
+                    { id: 5, name: 'Short Fine Leg', x: 510, y: 560, role: 'inner' },
+                    { id: 6, name: 'Point', x: 220, y: 460, role: 'inner' },
+                    { id: 7, name: 'Deep Point', x: 100, y: 460, role: 'boundary' },
+                    { id: 8, name: 'Long Off', x: 280, y: 80, role: 'boundary' },
+                    { id: 9, name: 'Long On', x: 520, y: 80, role: 'boundary' },
+                    { id: 10, name: 'Deep Mid Wicket', x: 690, y: 320, role: 'boundary' },
+                    { id: 11, name: 'Deep Square Leg', x: 670, y: 490, role: 'boundary' }
                 ]
             },
             't20_death_spin': {
-                title: "Death Overs Spin - Wide Line Defense (Max 5)",
-                desc: "Bowler bowls flat and wide of off-stump. 5 boundary catchers primarily protecting the V and off-side sweep arcs.",
+                title: 'Death Overs Spin - Wide Line Defense (Max 5)',
+                desc: 'Bowler bowls flat and wide of off-stump. 5 boundary catchers primarily protecting the V and off-side sweep arcs.',
                 positions: [
-                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
-                    { id: 2, name: "Wicket Keeper", x: 400, y: 500, role: "close" },
-                    { id: 3, name: "Point", x: 220, y: 460, role: "inner" },
-                    { id: 4, name: "Short Third", x: 300, y: 550, role: "inner" },
-                    { id: 5, name: "Mid Wicket", x: 540, y: 370, role: "inner" },
-                    { id: 6, name: "Short Fine Leg", x: 510, y: 550, role: "inner" },
-                    { id: 7, name: "Deep Cover", x: 100, y: 380, role: "boundary" },
-                    { id: 8, name: "Long Off", x: 280, y: 80, role: "boundary" },
-                    { id: 9, name: "Long On", x: 520, y: 80, role: "boundary" },
-                    { id: 10, name: "Deep Mid Wicket", x: 690, y: 300, role: "boundary" },
-                    { id: 11, name: "Deep Square Leg", x: 680, y: 480, role: "boundary" }
+                    { id: 1, name: 'Bowler', x: 400, y: 310, role: 'close' },
+                    { id: 2, name: 'Wicket Keeper', x: 400, y: 500, role: 'close' },
+                    { id: 3, name: 'Point', x: 220, y: 460, role: 'inner' },
+                    { id: 4, name: 'Short Third', x: 300, y: 550, role: 'inner' },
+                    { id: 5, name: 'Mid Wicket', x: 540, y: 370, role: 'inner' },
+                    { id: 6, name: 'Short Fine Leg', x: 510, y: 550, role: 'inner' },
+                    { id: 7, name: 'Deep Cover', x: 100, y: 380, role: 'boundary' },
+                    { id: 8, name: 'Long Off', x: 280, y: 80, role: 'boundary' },
+                    { id: 9, name: 'Long On', x: 520, y: 80, role: 'boundary' },
+                    { id: 10, name: 'Deep Mid Wicket', x: 690, y: 300, role: 'boundary' },
+                    { id: 11, name: 'Deep Square Leg', x: 680, y: 480, role: 'boundary' }
                 ]
             },
             'test_attacking_pace': {
-                title: "Test New Ball - 3 Slips & Gully",
-                desc: "Standard red-ball aggressive cordon. 3 Slips, Gully, and technical inner-ring fielders designed to induce and catch the edged drive. Zero boundary riders.",
+                title: 'Test New Ball - 3 Slips & Gully',
+                desc: 'Standard red-ball aggressive cordon. 3 Slips, Gully, and technical inner-ring fielders designed to induce and catch the edged drive. Zero boundary riders.',
                 positions: [
-                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
-                    { id: 2, name: "Wicket Keeper", x: 400, y: 550, role: "close" },
-                    { id: 3, name: "First Slip", x: 370, y: 540, role: "close" },
-                    { id: 4, name: "Second Slip", x: 350, y: 530, role: "close" },
-                    { id: 5, name: "Third Slip", x: 330, y: 520, role: "close" },
-                    { id: 6, name: "Gully", x: 290, y: 490, role: "inner" },
-                    { id: 7, name: "Point", x: 220, y: 460, role: "inner" },
-                    { id: 8, name: "Cover", x: 260, y: 340, role: "inner" },
-                    { id: 9, name: "Mid Off", x: 350, y: 260, role: "inner" },
-                    { id: 10, name: "Mid On", x: 450, y: 260, role: "inner" },
-                    { id: 11, name: "Square Leg", x: 550, y: 460, role: "inner" }
+                    { id: 1, name: 'Bowler', x: 400, y: 310, role: 'close' },
+                    { id: 2, name: 'Wicket Keeper', x: 400, y: 550, role: 'close' },
+                    { id: 3, name: 'First Slip', x: 370, y: 540, role: 'close' },
+                    { id: 4, name: 'Second Slip', x: 350, y: 530, role: 'close' },
+                    { id: 5, name: 'Third Slip', x: 330, y: 520, role: 'close' },
+                    { id: 6, name: 'Gully', x: 290, y: 490, role: 'inner' },
+                    { id: 7, name: 'Point', x: 220, y: 460, role: 'inner' },
+                    { id: 8, name: 'Cover', x: 260, y: 340, role: 'inner' },
+                    { id: 9, name: 'Mid Off', x: 350, y: 260, role: 'inner' },
+                    { id: 10, name: 'Mid On', x: 450, y: 260, role: 'inner' },
+                    { id: 11, name: 'Square Leg', x: 550, y: 460, role: 'inner' }
                 ]
             },
             'test_attacking_spin': {
-                title: "Test Spin - Bat-Pad Trap",
-                desc: "Surrounding the bat. Inner-circle fielders are positioned aggressively close (Short Leg, Silly Point) to capitalize on bat-pad deflections and subtle edges.",
+                title: 'Test Spin - Bat-Pad Trap',
+                desc: 'Surrounding the bat. Inner-circle fielders are positioned aggressively close (Short Leg, Silly Point) to capitalize on bat-pad deflections and subtle edges.',
                 positions: [
-                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
-                    { id: 2, name: "Wicket Keeper", x: 400, y: 500, role: "close" },
-                    { id: 3, name: "Slip", x: 360, y: 490, role: "close" },
-                    { id: 4, name: "Short Leg", x: 440, y: 440, role: "close" },
-                    { id: 5, name: "Silly Point", x: 340, y: 440, role: "close" },
-                    { id: 6, name: "Point", x: 240, y: 460, role: "inner" },
-                    { id: 7, name: "Cover", x: 280, y: 340, role: "inner" },
-                    { id: 8, name: "Mid Off", x: 360, y: 280, role: "inner" },
-                    { id: 9, name: "Mid On", x: 440, y: 280, role: "inner" },
-                    { id: 10, name: "Mid Wicket", x: 530, y: 370, role: "inner" },
-                    { id: 11, name: "Square Leg", x: 550, y: 470, role: "inner" }
+                    { id: 1, name: 'Bowler', x: 400, y: 310, role: 'close' },
+                    { id: 2, name: 'Wicket Keeper', x: 400, y: 500, role: 'close' },
+                    { id: 3, name: 'Slip', x: 360, y: 490, role: 'close' },
+                    { id: 4, name: 'Short Leg', x: 440, y: 440, role: 'close' },
+                    { id: 5, name: 'Silly Point', x: 340, y: 440, role: 'close' },
+                    { id: 6, name: 'Point', x: 240, y: 460, role: 'inner' },
+                    { id: 7, name: 'Cover', x: 280, y: 340, role: 'inner' },
+                    { id: 8, name: 'Mid Off', x: 360, y: 280, role: 'inner' },
+                    { id: 9, name: 'Mid On', x: 440, y: 280, role: 'inner' },
+                    { id: 10, name: 'Mid Wicket', x: 530, y: 370, role: 'inner' },
+                    { id: 11, name: 'Square Leg', x: 550, y: 470, role: 'inner' }
                 ]
             },
             'test_defensive_pace': {
-                title: "Test Old Ball - Run Saver",
-                desc: "Deployed during high-scoring partnerships. Spreads boundary fielders to plug scoring arcs, removing slips and pushing the inner-circle ring deep.",
+                title: 'Test Old Ball - Run Saver',
+                desc: 'Deployed during high-scoring partnerships. Spreads boundary fielders to plug scoring arcs, removing slips and pushing the inner-circle ring deep.',
                 positions: [
-                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
-                    { id: 2, name: "Wicket Keeper", x: 400, y: 540, role: "close" },
-                    { id: 3, name: "Point", x: 220, y: 460, role: "inner" },
-                    { id: 4, name: "Cover", x: 260, y: 340, role: "inner" },
-                    { id: 5, name: "Mid Off", x: 340, y: 260, role: "inner" },
-                    { id: 6, name: "Mid On", x: 460, y: 260, role: "inner" },
-                    { id: 7, name: "Deep Cover", x: 100, y: 380, role: "boundary" },
-                    { id: 8, name: "Deep Point", x: 100, y: 500, role: "boundary" },
-                    { id: 9, name: "Deep Square Leg", x: 670, y: 480, role: "boundary" },
-                    { id: 10, name: "Deep Mid Wicket", x: 680, y: 340, role: "boundary" },
-                    { id: 11, name: "Deep Fine Leg", x: 600, y: 660, role: "boundary" }
+                    { id: 1, name: 'Bowler', x: 400, y: 310, role: 'close' },
+                    { id: 2, name: 'Wicket Keeper', x: 400, y: 540, role: 'close' },
+                    { id: 3, name: 'Point', x: 220, y: 460, role: 'inner' },
+                    { id: 4, name: 'Cover', x: 260, y: 340, role: 'inner' },
+                    { id: 5, name: 'Mid Off', x: 340, y: 260, role: 'inner' },
+                    { id: 6, name: 'Mid On', x: 460, y: 260, role: 'inner' },
+                    { id: 7, name: 'Deep Cover', x: 100, y: 380, role: 'boundary' },
+                    { id: 8, name: 'Deep Point', x: 100, y: 500, role: 'boundary' },
+                    { id: 9, name: 'Deep Square Leg', x: 670, y: 480, role: 'boundary' },
+                    { id: 10, name: 'Deep Mid Wicket', x: 680, y: 340, role: 'boundary' },
+                    { id: 11, name: 'Deep Fine Leg', x: 600, y: 660, role: 'boundary' }
                 ]
             },
             'test_defensive_spin': {
-                title: "Test Spin - Boundary Containment",
-                desc: "Heavy boundary protection straight down the ground. Slips are removed in favor of sweepers to restrict easy singles and boundaries on turning tracks.",
+                title: 'Test Spin - Boundary Containment',
+                desc: 'Heavy boundary protection straight down the ground. Slips are removed in favor of sweepers to restrict easy singles and boundaries on turning tracks.',
                 positions: [
-                    { id: 1, name: "Bowler", x: 400, y: 310, role: "close" },
-                    { id: 2, name: "Wicket Keeper", x: 400, y: 500, role: "close" },
-                    { id: 3, name: "Point", x: 230, y: 460, role: "inner" },
-                    { id: 4, name: "Cover", x: 270, y: 340, role: "inner" },
-                    { id: 5, name: "Square Leg", x: 550, y: 460, role: "inner" },
-                    { id: 6, name: "Long Off", x: 290, y: 90, role: "boundary" },
-                    { id: 7, name: "Long On", x: 510, y: 90, role: "boundary" },
-                    { id: 8, name: "Deep Mid Wicket", x: 680, y: 320, role: "boundary" },
-                    { id: 9, name: "Deep Square Leg", x: 680, y: 500, role: "boundary" },
-                    { id: 10, name: "Deep Point", x: 110, y: 480, role: "boundary" },
-                    { id: 11, name: "Deep Cover", x: 110, y: 360, role: "boundary" }
+                    { id: 1, name: 'Bowler', x: 400, y: 310, role: 'close' },
+                    { id: 2, name: 'Wicket Keeper', x: 400, y: 500, role: 'close' },
+                    { id: 3, name: 'Point', x: 230, y: 460, role: 'inner' },
+                    { id: 4, name: 'Cover', x: 270, y: 340, role: 'inner' },
+                    { id: 5, name: 'Square Leg', x: 550, y: 460, role: 'inner' },
+                    { id: 6, name: 'Long Off', x: 290, y: 90, role: 'boundary' },
+                    { id: 7, name: 'Long On', x: 510, y: 90, role: 'boundary' },
+                    { id: 8, name: 'Deep Mid Wicket', x: 680, y: 320, role: 'boundary' },
+                    { id: 9, name: 'Deep Square Leg', x: 680, y: 500, role: 'boundary' },
+                    { id: 10, name: 'Deep Point', x: 110, y: 480, role: 'boundary' },
+                    { id: 11, name: 'Deep Cover', x: 110, y: 360, role: 'boundary' }
                 ]
             }
         };
 
-        const Engine = {
+        const MAX_FIELD_PLAYERS = 11;
+        const MAX_RESERVE_PLAYERS = 3;
+
+        const appState = {
             stance: 'LHB',
+            presetKey: 't20_powerplay_pace',
+            activeField: null,
+            dragState: null,
+            popoverPlayerId: null,
+            toastTimer: null,
+            justDragged: false
+        };
 
-            init() {
-                this.svgLayer = document.getElementById('fielders-layer');
-                this.rosterBody = document.getElementById('roster-body');
-                
-                for (let i = 1; i <= 11; i++) {
-                    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                    
-                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    circle.setAttribute('id', `node-dot-${i}`);
-                    circle.setAttribute('r', '12');
-                    circle.setAttribute('class', 'fielder-node');
-                    circle.setAttribute('stroke', '#0f172a');
-                    circle.setAttribute('stroke-width', '2');
-                    
-                    const idText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                    idText.setAttribute('id', `node-id-${i}`);
-                    idText.setAttribute('class', 'fielder-label');
-                    idText.setAttribute('fill', '#ffffff');
-                    idText.setAttribute('font-size', '10');
-                    idText.setAttribute('font-weight', 'bold');
-                    idText.setAttribute('text-anchor', 'middle');
-                    idText.setAttribute('dy', '4');
-                    idText.textContent = i;
+        function getPresetKey() {
+            const phaseValue = document.getElementById('param-phase').value;
+            const bowlValue = document.getElementById('param-bowler').value;
+            return `${phaseValue}_${bowlValue}`;
+        }
 
-                    const labelBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                    labelBg.setAttribute('id', `node-bg-${i}`);
-                    labelBg.setAttribute('class', 'field-label-bg');
-                    labelBg.setAttribute('fill', 'rgba(15, 23, 42, 0.75)');
-                    labelBg.setAttribute('rx', '4');
-                    labelBg.setAttribute('height', '18');
+        function getCurrentPreset() {
+            return STRAT_MATRIX[appState.presetKey] || STRAT_MATRIX['t20_powerplay_pace'];
+        }
 
-                    const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                    nameText.setAttribute('id', `node-name-${i}`);
-                    nameText.setAttribute('class', 'fielder-label');
-                    nameText.setAttribute('fill', '#e2e8f0');
-                    nameText.setAttribute('font-size', '11');
-                    nameText.setAttribute('font-weight', '600');
-                    nameText.setAttribute('text-anchor', 'middle');
-                    nameText.setAttribute('dy', '-17');
+        function getPositionDefinition(positionName) {
+            const currentPosition = getCurrentPreset().positions.find(position => position.name === positionName);
+            if (currentPosition) return currentPosition;
+            for (const preset of Object.values(STRAT_MATRIX)) {
+                const position = preset.positions.find(candidate => candidate.name === positionName);
+                if (position) return position;
+            }
+            return null;
+        }
 
-                    group.appendChild(labelBg);
-                    group.appendChild(circle);
-                    group.appendChild(idText);
-                    group.appendChild(nameText);
-                    this.svgLayer.appendChild(group);
-                }
-                this.updateTeam();
-                this.render();
-            },
+        function getAllAssignments() {
+            if (!appState.activeField) return [];
+            const entries = [
+                { playerId: appState.activeField.bowler, position: 'Bowler', x: 400, y: 310 },
+                { playerId: appState.activeField.wicketKeeper, position: 'Wicket Keeper', x: 400, y: 530 }
+            ];
+            appState.activeField.fielders.forEach(field => {
+                entries.push({ playerId: field.playerId, position: field.position, x: field.x, y: field.y });
+            });
+            return entries.filter(entry => entry.playerId);
+        }
 
-            updateTeam() {
-                const selector = document.getElementById('team-selector');
-                const selectedOption = selector.options[selector.selectedIndex];
-                const color = selectedOption.getAttribute('data-color');
-                
-                document.getElementById('team-dot').style.backgroundColor = color;
-                document.getElementById('team-dot').style.boxShadow = `0 0 8px ${color}`;
-            },
+        function isPlayerOnField(playerId) {
+            return getAllAssignments().some(entry => entry.playerId === playerId);
+        }
 
-            setBatter(type) {
-                this.stance = type;
-                document.getElementById('btn-lhb').classList.toggle('active', type === 'LHB');
-                document.getElementById('btn-rhb').classList.toggle('active', type === 'RHB');
-                document.getElementById('stance-badge').textContent = type;
-                
-                const labelLeft = document.getElementById('label-left');
-                const labelRight = document.getElementById('label-right');
-                
-                if (type === 'RHB') {
-                    labelLeft.textContent = "LEG SIDE";
-                    labelRight.textContent = "OFF SIDE";
-                } else {
-                    labelLeft.textContent = "OFF SIDE";
-                    labelRight.textContent = "LEG SIDE";
-                }
-                
-                this.render();
-            },
+        function getPlayerAssignment(playerId) {
+            if (!appState.activeField) return null;
+            if (appState.activeField.bowler === playerId) return { position: 'Bowler', x: 400, y: 310 };
+            if (appState.activeField.wicketKeeper === playerId) return { position: 'Wicket Keeper', x: 400, y: 530 };
+            const assignment = appState.activeField.fielders.find(fielder => fielder.playerId === playerId);
+            return assignment ? { ...assignment } : null;
+        }
 
-            getZonalColor(role) {
-                if (role === 'close') return 'var(--fielder-close)';
-                if (role === 'inner') return 'var(--fielder-inner)';
-                return 'var(--fielder-boundary)';
-            },
+        function getPlayerAssignmentLabel(playerId) {
+            const assignment = getPlayerAssignment(playerId);
+            return assignment ? assignment.position : 'Reserve Player';
+        }
 
-            render() {
-                const phase = document.getElementById('param-phase').value;
-                const bowler = document.getElementById('param-bowler').value;
-                const strategyKey = `${phase}_${bowler}`;
-                
-                const preset = STRAT_MATRIX[strategyKey] || STRAT_MATRIX['t20_powerplay_pace'];
-                
-                document.getElementById('strategy-title').textContent = preset.title;
-                document.getElementById('strategy-desc').textContent = preset.desc;
-                this.rosterBody.innerHTML = '';
+        function getReservePlayers() {
+            const fieldIds = new Set(getAllAssignments().map(entry => entry.playerId));
+            return PLAYERS.filter(player => !fieldIds.has(player.id)).slice(0, MAX_RESERVE_PLAYERS);
+        }
 
-                preset.positions.forEach(pos => {
-                    let renderX = pos.x;
-                    
-                    if (this.stance === 'RHB' && pos.id > 2) { 
-                        renderX = 800 - pos.x; 
-                    }
+        function getOnFieldCount() {
+            return getAllAssignments().length;
+        }
 
-                    const dot = document.getElementById(`node-dot-${pos.id}`);
-                    const idTxt = document.getElementById(`node-id-${pos.id}`);
-                    const bg = document.getElementById(`node-bg-${pos.id}`);
-                    const nameTxt = document.getElementById(`node-name-${pos.id}`);
+        function isPowerplay() {
+            return appState.presetKey.startsWith('t20_powerplay_');
+        }
 
-                    dot.setAttribute('cx', renderX);
-                    dot.setAttribute('cy', pos.y);
-                    dot.setAttribute('fill', this.getZonalColor(pos.role));
+        function countFieldersOutsideCircle(fielders) {
+            return fielders.filter(fielder => Math.hypot(fielder.x - 400, fielder.y - 400) > 210).length;
+        }
 
-                    idTxt.setAttribute('x', renderX);
-                    idTxt.setAttribute('y', pos.y);
+        function wouldBreakPowerplayLimit(playerId, targetPosition) {
+            if (!isPowerplay() || targetPosition === 'Bowler' || targetPosition === 'Wicket Keeper') return false;
 
-                    nameTxt.setAttribute('x', renderX);
-                    nameTxt.setAttribute('y', pos.y);
-                    nameTxt.textContent = pos.name;
+            const targetPresetPosition = getPositionDefinition(targetPosition);
+            const targetSlot = appState.activeField.fielders.find(fielder => fielder.position === targetPosition);
+            const currentEntry = appState.activeField.fielders.find(fielder => fielder.playerId === playerId);
+            const simulatedFielders = appState.activeField.fielders.map(fielder => ({ ...fielder }));
+            const simulatedCurrent = simulatedFielders.find(fielder => fielder.playerId === playerId);
+            const simulatedTarget = simulatedFielders.find(fielder => fielder.position === targetPosition);
 
-                    const textLength = pos.name.length * 6.8; 
-                    bg.setAttribute('width', textLength + 10);
-                    bg.setAttribute('x', renderX - (textLength / 2) - 5);
-                    bg.setAttribute('y', pos.y - 29);
-
-                    const tr = document.createElement('tr');
-                    const roleText = pos.role === 'close' ? 'Close Catching' : pos.role === 'inner' ? 'Inner Ring' : 'Boundary Rider';
-                    
-                    tr.innerHTML = `
-                        <td><strong>${pos.id}</strong></td>
-                        <td style="font-weight: 500; color: #f8fafc;">${pos.name}</td>
-                        <td>
-                            <div style="display: flex; align-items: center;">
-                                <span class="role-indicator" style="background: ${this.getZonalColor(pos.role)}"></span>
-                                <span style="color: var(--text-muted);">${roleText}</span>
-                            </div>
-                        </td>
-                    `;
-                    this.rosterBody.appendChild(tr);
+            if (simulatedCurrent && simulatedTarget && simulatedCurrent.playerId !== simulatedTarget.playerId) {
+                const currentPlayerId = simulatedCurrent.playerId;
+                simulatedCurrent.playerId = simulatedTarget.playerId;
+                simulatedTarget.playerId = currentPlayerId;
+            } else if (simulatedCurrent && targetPresetPosition && !targetSlot) {
+                simulatedCurrent.position = targetPosition;
+                simulatedCurrent.x = targetPresetPosition.x;
+                simulatedCurrent.y = targetPresetPosition.y;
+            } else if (!simulatedCurrent && simulatedTarget) {
+                simulatedTarget.playerId = playerId;
+            } else if (!simulatedCurrent && targetPresetPosition) {
+                simulatedFielders.push({
+                    playerId,
+                    position: targetPosition,
+                    x: targetPresetPosition.x,
+                    y: targetPresetPosition.y
                 });
             }
+
+            return countFieldersOutsideCircle(simulatedFielders) > 2;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('status-toast');
+            if (!toast) return;
+            toast.textContent = message;
+            toast.classList.add('visible');
+            clearTimeout(appState.toastTimer);
+            appState.toastTimer = setTimeout(() => toast.classList.remove('visible'), 1800);
+        }
+
+        function getZonalRole(positionName) {
+            const normalized = (positionName || '').toLowerCase();
+            if (normalized.includes('bowler')) return 'Bowler';
+            if (normalized.includes('keeper')) return 'Close Catching';
+            if (normalized.includes('slip') || normalized.includes('gully') || normalized.includes('short leg') || normalized.includes('silly') || normalized.includes('short fine') || normalized.includes('short third') || normalized.includes('short mid')) return 'Close Catching';
+            if (normalized.includes('deep') || normalized.includes('long') || normalized.includes('third man') || normalized.includes('fine leg')) return 'Boundary Rider';
+            return 'Inner Ring';
+        }
+
+        function getPositionColor(positionName) {
+            const role = getZonalRole(positionName);
+            if (role === 'Bowler') return 'var(--fielder-close)';
+            if (role === 'Close Catching') return 'var(--fielder-close)';
+            if (role === 'Boundary Rider') return 'var(--fielder-boundary)';
+            return 'var(--fielder-inner)';
+        }
+
+        function clampPositionToField(x, y) {
+            const dx = x - 400;
+            const dy = y - 400;
+            const distance = Math.hypot(dx, dy);
+            if (distance <= FIELD_RADIUS) return { x, y };
+            const ratio = FIELD_RADIUS / distance;
+            return { x: 400 + dx * ratio, y: 400 + dy * ratio };
+        }
+
+        function getDisplayX(x) {
+            return appState.stance === 'RHB' ? 800 - x : x;
+        }
+
+        function getManualPositionName(x, y) {
+            const preset = getCurrentPreset();
+            const candidates = preset.positions.filter(pos => pos.name !== 'Bowler' && pos.name !== 'Wicket Keeper');
+            if (!candidates.length) return 'Point';
+            let nearest = candidates[0];
+            let bestDistance = Number.POSITIVE_INFINITY;
+            candidates.forEach(candidate => {
+                const dx = x - candidate.x;
+                const dy = y - candidate.y;
+                const distance = Math.hypot(dx, dy);
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    nearest = candidate;
+                }
+            });
+            if (bestDistance <= 90) return nearest.name;
+
+            const angle = Math.atan2(y - 400, x - 400);
+            const segment = ((angle + Math.PI * 2 + Math.PI / 2) % (Math.PI * 2)) / (Math.PI / 8);
+            const fallbacks = ['Point', 'Deep Point', 'Cover', 'Deep Cover', 'Mid Off', 'Long Off', 'Mid On', 'Long On', 'Mid Wicket', 'Deep Mid Wicket', 'Square Leg', 'Deep Square Leg', 'Fine Leg', 'Deep Fine Leg', 'Third Man', 'Deep Third', 'Short Fine Leg'];
+            const index = Math.max(0, Math.min(fallbacks.length - 1, Math.round(segment)));
+            const value = fallbacks[index];
+            const distanceFromCenter = Math.hypot(x - 400, y - 400);
+            return distanceFromCenter > 250 && !value.startsWith('Deep') ? `Deep ${value}` : value;
+        }
+
+        function createFieldStateFromPreset(presetKey) {
+            const preset = STRAT_MATRIX[presetKey] || STRAT_MATRIX['t20_powerplay_pace'];
+            const nonKeeperPlayers = PLAYERS.filter(player => player.id !== WICKET_KEEPER_ID);
+            const bowler = nonKeeperPlayers[0];
+            const reserveIds = new Set(['nadir', 'hamza-iftekhar', 'hziq']);
+            const fieldSlotPlayers = nonKeeperPlayers.filter(player => player.id !== bowler.id && !reserveIds.has(player.id));
+            const fieldPositions = preset.positions.filter(pos => pos.name !== 'Bowler' && pos.name !== 'Wicket Keeper');
+            const fielders = fieldPositions.map((position, index) => {
+                const player = fieldSlotPlayers[index] || fieldSlotPlayers[0];
+                return {
+                    playerId: player.id,
+                    position: position.name,
+                    x: position.x,
+                    y: position.y,
+                    baseX: position.x,
+                    baseY: position.y,
+                    basePosition: position.name
+                };
+            });
+            return {
+                bowler: bowler.id,
+                wicketKeeper: WICKET_KEEPER_ID,
+                fielders
+            };
+        }
+
+        function applyPreset(presetKey) {
+            const key = STRAT_MATRIX[presetKey] ? presetKey : 't20_powerplay_pace';
+            appState.presetKey = key;
+            appState.activeField = createFieldStateFromPreset(key);
+            appState.popoverPlayerId = null;
+            renderAll();
+        }
+
+        function assignPlayerToPosition(playerId, targetPosition) {
+            if (!appState.activeField) return;
+            if (playerId === WICKET_KEEPER_ID && targetPosition !== 'Wicket Keeper') {
+                showToast('Hassam is the designated wicket keeper.');
+                renderAssignmentControls();
+                return;
+            }
+            if (targetPosition === 'Wicket Keeper') {
+                if (playerId !== WICKET_KEEPER_ID) {
+                    showToast('Hassam is the designated wicket keeper.');
+                    renderAssignmentControls();
+                    return;
+                }
+                appState.activeField.wicketKeeper = WICKET_KEEPER_ID;
+                renderAll();
+                return;
+            }
+
+            const isAlreadyOnField = isPlayerOnField(playerId);
+            if (targetPosition === 'Bowler') {
+                if (playerId === WICKET_KEEPER_ID) {
+                    showToast('Hassam is the designated wicket keeper.');
+                    renderAssignmentControls();
+                    return;
+                }
+
+                const currentBowler = appState.activeField.bowler;
+                const selectedFieldEntry = appState.activeField.fielders.find(fielder => fielder.playerId === playerId);
+
+                if (currentBowler === playerId) {
+                    renderAll();
+                    return;
+                }
+
+                if (selectedFieldEntry && currentBowler && currentBowler !== playerId) {
+                    const previousSelection = { ...selectedFieldEntry };
+                    selectedFieldEntry.playerId = currentBowler;
+                    selectedFieldEntry.position = previousSelection.position;
+                    selectedFieldEntry.x = previousSelection.x;
+                    selectedFieldEntry.y = previousSelection.y;
+                    selectedFieldEntry.baseX = previousSelection.baseX;
+                    selectedFieldEntry.baseY = previousSelection.baseY;
+                    selectedFieldEntry.basePosition = previousSelection.basePosition;
+                }
+
+                appState.activeField.bowler = playerId;
+                renderAll();
+                return;
+            }
+
+            if (wouldBreakPowerplayLimit(playerId, targetPosition)) {
+                showToast('Only 2 fielders are allowed outside the circle');
+                renderAssignmentControls();
+                return;
+            }
+
+            if (!isAlreadyOnField && getOnFieldCount() >= MAX_FIELD_PLAYERS) {
+                showToast('12 cannot be added');
+                renderAssignmentControls();
+                return;
+            }
+
+            const currentFieldEntry = appState.activeField.fielders.find(fielder => fielder.playerId === playerId);
+            const targetSlot = appState.activeField.fielders.find(fielder => fielder.position === targetPosition);
+
+            if (targetSlot && targetSlot.playerId !== playerId) {
+                const displacedPlayerId = targetSlot.playerId;
+                if (currentFieldEntry) {
+                    const temp = { ...currentFieldEntry };
+                    currentFieldEntry.playerId = displacedPlayerId;
+                    currentFieldEntry.position = targetSlot.position;
+                    currentFieldEntry.x = targetSlot.x;
+                    currentFieldEntry.y = targetSlot.y;
+                    currentFieldEntry.baseX = targetSlot.baseX;
+                    currentFieldEntry.baseY = targetSlot.baseY;
+                    currentFieldEntry.basePosition = targetSlot.basePosition;
+                    targetSlot.playerId = playerId;
+                    targetSlot.position = temp.position;
+                    targetSlot.x = temp.x;
+                    targetSlot.y = temp.y;
+                    targetSlot.baseX = temp.baseX;
+                    targetSlot.baseY = temp.baseY;
+                    targetSlot.basePosition = temp.basePosition;
+                } else {
+                    targetSlot.playerId = playerId;
+                    targetSlot.position = targetPosition;
+                    targetSlot.baseX = targetSlot.x;
+                    targetSlot.baseY = targetSlot.y;
+                    targetSlot.basePosition = targetPosition;
+                    if (displacedPlayerId && !isPlayerOnField(displacedPlayerId)) {
+                        appState.activeField.fielders = appState.activeField.fielders.filter(fielder => fielder.playerId !== displacedPlayerId);
+                    }
+                }
+            } else {
+                if (currentFieldEntry) {
+                    currentFieldEntry.position = targetPosition;
+                    const presetPosition = getPositionDefinition(targetPosition);
+                    if (presetPosition) {
+                        currentFieldEntry.x = presetPosition.x;
+                        currentFieldEntry.y = presetPosition.y;
+                        currentFieldEntry.baseX = presetPosition.x;
+                        currentFieldEntry.baseY = presetPosition.y;
+                        currentFieldEntry.basePosition = presetPosition.name;
+                    }
+                } else {
+                    const presetPosition = getPositionDefinition(targetPosition);
+                    appState.activeField.fielders.push({
+                        playerId,
+                        position: targetPosition,
+                        x: presetPosition ? presetPosition.x : 400,
+                        y: presetPosition ? presetPosition.y : 400,
+                        baseX: presetPosition ? presetPosition.x : 400,
+                        baseY: presetPosition ? presetPosition.y : 400,
+                        basePosition: targetPosition
+                    });
+                }
+            }
+
+            const reservePlayers = getReservePlayers();
+            if (reservePlayers.length > MAX_RESERVE_PLAYERS) {
+                const extraReserve = reservePlayers.slice(MAX_RESERVE_PLAYERS);
+                extraReserve.forEach(player => {
+                    const index = appState.activeField.fielders.findIndex(fielder => fielder.playerId === player.id);
+                    if (index >= 0) appState.activeField.fielders.splice(index, 1);
+                });
+            }
+            renderAll();
+        }
+
+        function removePlayerFromCurrentPosition(playerId) {
+            if (!appState.activeField) return;
+            if (playerId === WICKET_KEEPER_ID) {
+                showToast('Hassam is the designated wicket keeper.');
+                renderAssignmentControls();
+                return;
+            }
+
+            const reserveCountBefore = getReservePlayers().length;
+            if (reserveCountBefore >= MAX_RESERVE_PLAYERS && isPlayerOnField(playerId)) {
+                showToast('11 must be on the field');
+                renderAssignmentControls();
+                return;
+            }
+
+            const reservePool = getReservePlayers().map(player => player.id).filter(id => id !== playerId);
+            const replacementId = reservePool[0] || null;
+
+            if (appState.activeField.bowler === playerId) {
+                appState.activeField.bowler = replacementId || null;
+                renderAll();
+                return;
+            }
+
+            const index = appState.activeField.fielders.findIndex(fielder => fielder.playerId === playerId);
+            if (index >= 0) {
+                const removed = appState.activeField.fielders.splice(index, 1)[0];
+                if (replacementId) {
+                    const presetPosition = getCurrentPreset().positions.find(pos => pos.name === removed.position) || getCurrentPreset().positions[3];
+                    appState.activeField.fielders.push({
+                        playerId: replacementId,
+                        position: removed.position,
+                        x: presetPosition.x,
+                        y: presetPosition.y,
+                        baseX: presetPosition.x,
+                        baseY: presetPosition.y,
+                        basePosition: removed.position
+                    });
+                }
+            }
+            renderAll();
+        }
+
+        function swapReservePlayerIntoField(reservePlayerId, targetPlayerId) {
+            if (!appState.activeField) return;
+            if (isPlayerOnField(reservePlayerId)) {
+                showToast('Player is already on the field');
+                renderAssignmentControls();
+                return;
+            }
+            if (targetPlayerId === appState.activeField.bowler) {
+                showToast('The bowler cannot be swapped');
+                renderAssignmentControls();
+                return;
+            }
+
+            const targetEntry = appState.activeField.fielders.find(fielder => fielder.playerId === targetPlayerId);
+            if (!targetEntry) {
+                showToast('Select a fielder to swap');
+                renderAssignmentControls();
+                return;
+            }
+
+            targetEntry.playerId = reservePlayerId;
+            renderAll();
+            showToast('Player swapped onto the field');
+        }
+
+        function renderAssignmentControls() {
+            const list = document.getElementById('player-assignment-list');
+            const availableList = document.getElementById('available-player-list');
+            if (!list) return;
+            list.innerHTML = '';
+
+            PLAYERS.forEach(player => {
+                const row = document.createElement('div');
+                row.className = 'player-assign-row';
+
+                const name = document.createElement('div');
+                name.className = 'player-assign-name';
+                name.textContent = player.name;
+
+                const select = document.createElement('select');
+                select.dataset.playerId = player.id;
+                select.setAttribute('aria-label', `${player.name} assignment`);
+
+                const reserveOption = document.createElement('option');
+                reserveOption.value = 'Reserve Player';
+                reserveOption.textContent = 'Reserve Player';
+                select.appendChild(reserveOption);
+
+                FIELD_POSITION_NAMES.forEach(positionName => {
+                    const option = document.createElement('option');
+                    option.value = positionName;
+                    option.textContent = positionName;
+                    select.appendChild(option);
+                });
+
+                const currentAssignment = getPlayerAssignmentLabel(player.id);
+                select.value = currentAssignment === 'Reserve Player' ? 'Reserve Player' : currentAssignment;
+                select.addEventListener('change', function(event) {
+                    const value = event.target.value;
+                    if (value === 'Reserve Player') {
+                        removePlayerFromCurrentPosition(player.id);
+                    } else {
+                        assignPlayerToPosition(player.id, value);
+                    }
+                });
+
+                row.appendChild(name); row.appendChild(select); list.appendChild(row);
+            });
+
+            if (availableList) {
+                availableList.innerHTML = '';
+                const reservePlayers = getReservePlayers();
+                if (!reservePlayers.length) {
+                    const placeholder = document.createElement('div');
+                    placeholder.style.fontSize = '0.75rem';
+                    placeholder.style.color = 'var(--text-muted)';
+                    placeholder.textContent = 'All 3 reserve slots are filled';
+                    availableList.appendChild(placeholder);
+                    return;
+                }
+                reservePlayers.forEach(player => {
+                    const chip = document.createElement('div');
+                    chip.style.display = 'inline-flex';
+                    chip.style.padding = '0.35rem 0.55rem';
+                    chip.style.borderRadius = '999px';
+                    chip.style.border = '1px solid var(--border)';
+                    chip.style.background = 'rgba(56, 189, 248, 0.08)';
+                    chip.style.color = 'var(--text-main)';
+                    chip.style.fontSize = '0.72rem';
+                    chip.style.fontWeight = '600';
+
+                    const name = document.createElement('span');
+                    name.textContent = player.name;
+
+                    const swapSelect = document.createElement('select');
+                    swapSelect.style.marginLeft = '0.45rem';
+                    swapSelect.style.maxWidth = '120px';
+                    swapSelect.style.fontSize = '0.68rem';
+                    swapSelect.setAttribute('aria-label', `Swap ${player.name} into field`);
+
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = 'Swap in for';
+                    swapSelect.appendChild(defaultOption);
+
+                    appState.activeField.fielders.forEach(fielder => {
+                        const option = document.createElement('option');
+                        option.value = fielder.playerId;
+                        option.textContent = PLAYER_BY_ID[fielder.playerId].name;
+                        swapSelect.appendChild(option);
+                    });
+
+                    swapSelect.addEventListener('change', event => {
+                        if (event.target.value) {
+                            swapReservePlayerIntoField(player.id, event.target.value);
+                        }
+                    });
+
+                    chip.appendChild(name);
+                    chip.appendChild(swapSelect);
+                    availableList.appendChild(chip);
+                });
+            }
+        }
+
+        function renderTable() {
+            const rosterBody = document.getElementById('roster-body');
+            if (!rosterBody) return;
+            rosterBody.innerHTML = '';
+
+            const entries = [
+                { playerId: appState.activeField.bowler, position: 'Bowler', role: 'Bowler' },
+                { playerId: appState.activeField.wicketKeeper, position: 'Wicket Keeper', role: 'Close Catching' }
+            ];
+            appState.activeField.fielders.forEach(fielder => {
+                entries.push({ playerId: fielder.playerId, position: fielder.position, role: getZonalRole(fielder.position) });
+            });
+
+            entries.forEach((entry, index) => {
+                const player = PLAYER_BY_ID[entry.playerId];
+                if (!player) return;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${index + 1}</strong></td>
+                    <td style="font-weight: 600; color: #f8fafc;">${player.name}</td>
+                    <td style="color: var(--text-main);">${entry.position}</td>
+                    <td>
+                        <div style="display: flex; align-items: center;">
+                            <span class="role-indicator" style="background: ${getPositionColor(entry.position)}"></span>
+                            <span style="color: var(--text-muted);">${entry.role}</span>
+                        </div>
+                    </td>
+                `;
+                rosterBody.appendChild(row);
+            });
+        }
+
+        function createSvgElement(tag, attributes = {}) {
+            const element = document.createElementNS('http://www.w3.org/2000/svg', tag);
+            Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+            return element;
+        }
+
+        function buildFieldNodes() {
+            const fieldLayer = document.getElementById('fielders-layer');
+            if (!fieldLayer || !appState.activeField) return;
+            fieldLayer.innerHTML = '';
+
+            const allAssignments = getAllAssignments();
+            allAssignments.forEach(assignment => {
+                const player = PLAYER_BY_ID[assignment.playerId];
+                if (!player) return;
+                const group = createSvgElement('g', {
+                    transform: `translate(${getDisplayX(assignment.x)}, ${assignment.y})`,
+                    'data-player-id': assignment.playerId,
+                    'data-position': assignment.position,
+                    class: 'fielder-marker',
+                    style: 'cursor: pointer; touch-action: none;'
+                });
+
+                const halo = createSvgElement('circle', {
+                    r: assignment.playerId === WICKET_KEEPER_ID ? 18 : 16,
+                    fill: 'rgba(56, 189, 248, 0.12)',
+                    stroke: assignment.playerId === WICKET_KEEPER_ID ? '#38bdf8' : '#e2e8f0',
+                    'stroke-width': '1.4',
+                    opacity: '0.85'
+                });
+
+                const circle = createSvgElement('circle', {
+                    r: assignment.playerId === WICKET_KEEPER_ID ? 12 : 11,
+                    fill: getPositionColor(assignment.position),
+                    stroke: '#0f172a',
+                    'stroke-width': '2'
+                });
+
+                const nameLabel = createSvgElement('text', {
+                    x: 0,
+                    y: '-18',
+                    'text-anchor': 'middle',
+                    'font-size': '9.5',
+                    'font-weight': '700',
+                    fill: '#f8fafc',
+                    'letter-spacing': '0.3px'
+                });
+                nameLabel.textContent = player.name.toUpperCase();
+
+                const positionLabel = createSvgElement('text', {
+                    x: 0,
+                    y: '21',
+                    'text-anchor': 'middle',
+                    'font-size': '8.5',
+                    'font-weight': '600',
+                    fill: '#cbd5e1'
+                });
+                positionLabel.textContent = assignment.position;
+
+                group.appendChild(halo);
+                group.appendChild(circle);
+                group.appendChild(nameLabel);
+                group.appendChild(positionLabel);
+                fieldLayer.appendChild(group);
+
+                group.addEventListener('pointerdown', event => {
+                    event.preventDefault();
+                    if (assignment.playerId === WICKET_KEEPER_ID) {
+                        showToast('Hassam is the designated wicket keeper.');
+                        return;
+                    }
+                    const svg = document.getElementById('field-canvas');
+                    svg.setPointerCapture(event.pointerId);
+                    appState.dragState = {
+                        playerId: assignment.playerId,
+                        pointerId: event.pointerId,
+                        moved: false
+                    };
+                    event.stopPropagation();
+                });
+
+                group.addEventListener('click', event => {
+                    if (appState.justDragged) {
+                        appState.justDragged = false;
+                        return;
+                    }
+                    if (assignment.playerId === WICKET_KEEPER_ID) {
+                        showToast('Hassam is the designated wicket keeper.');
+                        return;
+                    }
+                    showFielderPopover(assignment.playerId);
+                    event.stopPropagation();
+                });
+            });
+        }
+
+        function showFielderPopover(playerId) {
+            const popover = document.getElementById('fielder-popover');
+            const fieldContainer = document.getElementById('field-container');
+            const assignment = getPlayerAssignment(playerId);
+            if (!popover || !fieldContainer || !assignment) return;
+            const player = PLAYER_BY_ID[playerId];
+            const rect = document.getElementById('field-canvas').getBoundingClientRect();
+            const containerRect = fieldContainer.getBoundingClientRect();
+            const xCoord = getDisplayX(assignment.x || 400);
+            const x = ((xCoord / 800) * rect.width) + rect.left - containerRect.left + 22;
+            const y = ((assignment.y / 800) * rect.height) + rect.top - containerRect.top - 80;
+
+            popover.innerHTML = `
+                <h4>${player.name}</h4>
+                <div class="detail"><span>Current Position</span><strong>${assignment.position}</strong></div>
+                <div class="detail"><span>Move / Drag</span><strong>Drag marker on field</strong></div>
+                <button type="button" data-role="reset-position">Reset Position</button>
+            `;
+            popover.style.left = `${Math.min(Math.max(x, 12), fieldContainer.clientWidth - 210)}px`;
+            popover.style.top = `${Math.max(y, 14)}px`;
+            popover.classList.remove('hidden');
+            appState.popoverPlayerId = playerId;
+            const resetButton = popover.querySelector('[data-role="reset-position"]');
+            if (resetButton) {
+                resetButton.addEventListener('click', () => resetPlayerPosition(playerId));
+            }
+        }
+
+        function hideFielderPopover() {
+            const popover = document.getElementById('fielder-popover');
+            if (popover) popover.classList.add('hidden');
+            appState.popoverPlayerId = null;
+        }
+
+        function resetPlayerPosition(playerId) {
+            if (!appState.activeField) return;
+            if (playerId === WICKET_KEEPER_ID) {
+                showToast('Hassam is the designated wicket keeper.');
+                return;
+            }
+            const fieldEntry = appState.activeField.fielders.find(fielder => fielder.playerId === playerId);
+            if (!fieldEntry) return;
+            fieldEntry.x = fieldEntry.baseX;
+            fieldEntry.y = fieldEntry.baseY;
+            fieldEntry.position = fieldEntry.basePosition || fieldEntry.position;
+            hideFielderPopover();
+            renderAll();
+        }
+
+        function updateDraggedPosition(pointerX, pointerY) {
+            if (!appState.dragState || !appState.activeField) return;
+            const svg = document.getElementById('field-canvas');
+            const bounds = svg.getBoundingClientRect();
+            let x = ((pointerX - bounds.left) / bounds.width) * 800;
+            let y = ((pointerY - bounds.top) / bounds.height) * 800;
+            if (appState.stance === 'RHB') x = 800 - x;
+            const clamped = clampPositionToField(x, y);
+            const fieldEntry = appState.activeField.fielders.find(fielder => fielder.playerId === appState.dragState.playerId);
+            if (!fieldEntry) return;
+            if (isPowerplay()) {
+                const simulatedFielders = appState.activeField.fielders.map(entry => ({ ...entry }));
+                const simulatedEntry = simulatedFielders.find(entry => entry.playerId === fieldEntry.playerId);
+                simulatedEntry.x = clamped.x;
+                simulatedEntry.y = clamped.y;
+                if (countFieldersOutsideCircle(simulatedFielders) > 2) {
+                    showToast('Only 2 fielders are allowed outside the circle');
+                    return;
+                }
+            }
+            fieldEntry.x = clamped.x;
+            fieldEntry.y = clamped.y;
+            fieldEntry.position = getManualPositionName(clamped.x, clamped.y);
+            fieldEntry.baseX = clamped.x;
+            fieldEntry.baseY = clamped.y;
+            fieldEntry.basePosition = fieldEntry.position;
+            appState.dragState.moved = true;
+            appState.justDragged = true;
+            renderAll();
+        }
+
+        function renderPresetInfo() {
+            const preset = getCurrentPreset();
+            document.getElementById('strategy-title').textContent = preset.title;
+            document.getElementById('strategy-desc').textContent = preset.desc;
+        }
+
+        function renderStance() {
+            const labelLeft = document.getElementById('label-left');
+            const labelRight = document.getElementById('label-right');
+            const label = appState.stance === 'RHB' ? 'RHB' : 'LHB';
+            document.getElementById('stance-badge').textContent = label;
+            document.getElementById('btn-lhb').classList.toggle('active', appState.stance === 'LHB');
+            document.getElementById('btn-rhb').classList.toggle('active', appState.stance === 'RHB');
+            if (labelLeft && labelRight) {
+                labelLeft.textContent = appState.stance === 'RHB' ? 'LEG SIDE' : 'OFF SIDE';
+                labelRight.textContent = appState.stance === 'RHB' ? 'OFF SIDE' : 'LEG SIDE';
+            }
+        }
+
+        function renderAll() {
+            if (!appState.activeField) return;
+            renderPresetInfo();
+            renderStance();
+            renderAssignmentControls();
+            renderTable();
+            buildFieldNodes();
+            if (appState.popoverPlayerId) {
+                const assignment = getPlayerAssignment(appState.popoverPlayerId);
+                if (assignment) showFielderPopover(appState.popoverPlayerId);
+                else hideFielderPopover();
+            }
+        }
+
+        function resetField() {
+            applyPreset(appState.presetKey);
+            showToast('Field reset to preset');
+        }
+
+        function autoAssign() {
+            applyPreset(appState.presetKey);
+            showToast('Auto assignment restored');
+        }
+
+        function bindInteractionEvents() {
+            const phaseSelect = document.getElementById('param-phase');
+            const bowlerSelect = document.getElementById('param-bowler');
+            const svg = document.getElementById('field-canvas');
+            const resetButton = document.getElementById('btn-reset-field');
+            const autoButton = document.getElementById('btn-auto-assign');
+            const lhbButton = document.getElementById('btn-lhb');
+            const rhbButton = document.getElementById('btn-rhb');
+
+            phaseSelect.addEventListener('change', () => {
+                applyPreset(getPresetKey());
+            });
+            bowlerSelect.addEventListener('change', () => {
+                applyPreset(getPresetKey());
+            });
+            lhbButton.addEventListener('click', () => {
+                appState.stance = 'LHB';
+                renderAll();
+            });
+            rhbButton.addEventListener('click', () => {
+                appState.stance = 'RHB';
+                renderAll();
+            });
+            resetButton.addEventListener('click', resetField);
+            autoButton.addEventListener('click', autoAssign);
+
+            svg.addEventListener('pointermove', event => {
+                if (!appState.dragState) return;
+                event.preventDefault();
+                updateDraggedPosition(event.clientX, event.clientY);
+            });
+
+            svg.addEventListener('pointerup', event => {
+                if (!appState.dragState) return;
+                event.preventDefault();
+                const dragState = appState.dragState;
+                appState.dragState = null;
+                if (svg.hasPointerCapture(event.pointerId)) svg.releasePointerCapture(event.pointerId);
+                if (!dragState.moved) showFielderPopover(dragState.playerId);
+                else showToast('Field position updated');
+                renderAll();
+            });
+
+            svg.addEventListener('pointerleave', () => {
+                if (appState.dragState) {
+                    appState.dragState = null;
+                }
+            });
+
+            document.addEventListener('click', event => {
+                if (!event.target.closest('.fielder-marker') && !event.target.closest('.fielder-popover')) {
+                    hideFielderPopover();
+                }
+            });
+        }
+
+        const Engine = {
+            init() {
+                const teamSelector = document.getElementById('team-selector');
+                if (teamSelector) {
+                    teamSelector.addEventListener('change', () => {
+                        const selectedOption = teamSelector.options[teamSelector.selectedIndex];
+                        const color = selectedOption && selectedOption.getAttribute('data-color');
+                        const teamDot = document.getElementById('team-dot');
+                        if (teamDot && color) {
+                            teamDot.style.backgroundColor = color;
+                            teamDot.style.boxShadow = `0 0 8px ${color}`;
+                        }
+                    });
+                }
+                bindInteractionEvents();
+                appState.presetKey = getPresetKey();
+                applyPreset(appState.presetKey);
+            },
+            setBatter(type) {
+                appState.stance = type;
+                renderAll();
+            },
+            render() {
+                const currentKey = getPresetKey();
+                if (currentKey !== appState.presetKey) {
+                    applyPreset(currentKey);
+                } else {
+                    renderAll();
+                }
+            }
         };
+
+        window.STRAT_MATRIX = STRAT_MATRIX;
+        window.PLAYERS = PLAYERS;
+        window.PLAYER_BY_ID = PLAYER_BY_ID;
+        window.appState = appState;
+        window.getReservePlayers = getReservePlayers;
+        window.getAvailablePlayers = getReservePlayers;
+        window.getPlayerAssignment = getPlayerAssignment;
+        window.assignPlayerToPosition = assignPlayerToPosition;
+        window.resetPlayerPosition = resetPlayerPosition;
+        window.Engine = Engine;
 
         window.onload = () => Engine.init();
     </script>
